@@ -5,6 +5,8 @@ library(ggplot2)
 library(RColorBrewer)
 library(forcats)
 
+setwd("~/Social-impact-and-responsivenesss/Sampling_design")
+
 df1_800_400_2_1x  <-read.csv("res_800_400_2_1x.csv")
 df1_800_200_4_1x  <-read.csv("res_800_200_4_1x.csv")
 df1_800_100_8_1x  <-read.csv("res_800_100_8_1x.csv")
