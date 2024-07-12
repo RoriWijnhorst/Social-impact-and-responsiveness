@@ -1,0 +1,114 @@
+---
+title: "Variance-partitioning model"
+author: "R. E. Wijnhorst"
+date: "2024-07-04"
+output: html_document
+---
+
+Step 1. In order to run simulations on multiple cores, specify number of available cores under n_cores.
+```{r setup}
+n_cores <- 4
+require(parallel)
+cl <- makeCluster(n_cores)
+clusterEvalQ(cl, {
+  library(rstan)
+})
+```
+
+Step 2. Load list with simulated datasets
+```{r datalist}
+datalist<-readRDS("Your_datalist.RDS")
+```
+
+Step 3. Run Stan model and extract output.csv 
+```{r Stan model}
+## Stan Model V-P
+write("data {
+//Phenotype dataset
+
+  // Number of clusters (an integer)
+   int<lower=0> n_obs; // number of observations 
+   int<lower=0> n_ind; //number of individuals
+
+  // Clusters identifiers (an integer)
+   int<lower=0> individual[n_obs];  //  Individual ID repeated obs
+   int<lower=0> opponent[n_obs];  //  Individual ID opponent repeated obs
+
+  // Continuous variables
+    real xj[n_obs];  // observed covariate (opponent trait)
+     real z[n_obs];  // phenotypic observations
+ }
+
+ parameters {
+// Define parameters to estimate
+  // Parameters for model of phenotype
+     real B_0; //intercept
+
+
+   // Random effects
+   matrix[2,n_ind]         zI; //(intercepts and slopes, res_impact for each individual)
+   vector<lower=0>[2]      sigma_I; // sd  intercepts, slopes, res_impact
+   cholesky_factor_corr[2] L;  // factor to estimate covariance int-slopes
+   real<lower=0> sigma_e;
+ }
+
+ transformed parameters{
+    matrix[2,n_ind] I; //  Unscaled blups intercept and slope and res_impact for each individual
+    real e_z[n_obs]; // predicted values for covariate
+    I  = diag_pre_multiply(sigma_I, L) * zI; // get the unscaled value
+
+
+   for (i in 1:n_obs) {
+     e_z[i]  = B_0  +  I[1, individual[i]] + I[2, opponent[i]];
+   }
+ }
+
+model {
+// Create vector of predicted values
+  to_vector([B_0]) ~ normal(0, 1);
+
+ // Random effects distribution
+    to_vector(zI) ~ normal(0, 1);
+    to_vector(sigma_I) ~ normal(0, 1);
+    L ~ lkj_corr_cholesky(2);
+
+ // Likelihood function
+    for (i in 1:n_obs)
+     z[i]~normal(e_z[i], sigma_e);
+ }
+
+generated quantities{
+real<lower=0> Sigma2_intercept;
+real<lower=0> Sigma2_phi;
+real<lower=0> Sigma2_e;
+
+real cov_int_phi;
+
+matrix[2, 2]  Omega_I;
+
+Sigma2_intercept=sigma_I[1]^2;
+Sigma2_phi=sigma_I[2]^2;
+Sigma2_e=sigma_e^2;
+
+Omega_I = L * L';
+cov_int_phi = Omega_I[1,2]*sqrt(Sigma2_phi*Sigma2_intercept);
+
+ }", file="RR.stan")
+
+# Write stan function
+stan_func<-function(datalist){
+  #Parameters monitored
+  md <- stan("RR.stan", data = datalist,
+               pars = c("B_0", "Sigma2_intercept", "Sigma2_phi", "cov_int_phi", "Sigma2_e"),
+             control=list(max_treedepth = 15), chains = 1, iter = 5000,
+             warmup = 1000, thin = 1, cores = 1)
+  dat <- as.data.frame(t(round(summary(md)$summary[,c(1,4,6,8,9,10)],3)))
+  dat
+}
+
+# Apply function to list of data sets
+output <- do.call(rbind,parSapply(cl, datalist, stan_func))
+output <- as.data.frame(output)
+output$Parameter <- rep(c("B_0", "Sigma2_intercept", "Sigma2_phi", "cov_int_phi", "Sigma2_e", "lp_"),length(datalist))
+write.csv(output, "output.csv")
+```
