@@ -40,12 +40,12 @@ Vxe = 0.2    # measurement error or variation of labile trait
 r_ds  =  0.4     # part of Cov int-phi
 r_dpsi=  0       # part of Cov int-psi 
 r_spsi=  0       # part of Cov psi-phi 
-r_dx  =  0.4       # part of Cov int-phi 
+r_dx  =  0.4     # part of Cov int-phi 
 r_psix=  0       # part of Cov psi-phi 
 r_sx  =  0
 ```
 
-Step 3. Run to simulate datasets and write.RDS
+Step 3. Run code to simulate datasets. Dataframes are bundled in lists and saved as ".RDS" in the format that can be readily analysed with rstan.
 
 ```{r function sim}
 # Random balanced design function
@@ -95,7 +95,7 @@ df$zi=df$adi + df$psii*df$xj_e + df$asj + df$ei # Phenotypic Equation
 df
 }
 
-# Simulate datasets
+# Simulate datasets and create lists
 df<-sampling_design_balanced(n_ind, partners, repeats) # see Random balanced design function
 dfl <- list()
 for(i in 1:iterations){
@@ -110,6 +110,6 @@ dfl[[i]]<-list(n_obs = nrow(df2),
                  z=df2$zi)
 }
 
-# List naming: dfl_N(total observations)_N(indidviduals)_N(social partners)_N(repeats)
+# List saving: dfl_N(total observations)_N(indidviduals)_N(social partners)_N(repeats)
 saveRDS(dfl, paste0('dfl_',n_ind*partners*repeats,sep="_",n_ind,sep="_",partners,sep="_",repeats,"x.RDS"))
 ```
