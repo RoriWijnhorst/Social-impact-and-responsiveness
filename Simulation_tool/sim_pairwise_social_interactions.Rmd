@@ -25,25 +25,25 @@ Optional: simulate measurement error on the opponent trait with Vxe.
 
 ```{r parameters}
 # Means
-Malpha   = 0      # mean focal effect
+Malpha   = 1      # mean focal effect
 Mepsilon = 0      # mean partner effect
-Mpsi     = 0.2    # interaction coefficient psi
+Mpsi     = 0.3    # interaction coefficient psi
 Mx       = 0      # mean-centered covariate/opponent trait
 
 # Variances
 Valpha   = 0.2    # variance direct effect (mean behaviour)
-Vepsilon = 0.1    # variance social partner effect (residual impact)
-Vpsi     = 0      # variance in slopes (social responsiveness)
+Vepsilon = 0.01   # variance social partner effect (residual impact)
+Vpsi     = 0.1    # variance in slopes (social responsiveness)
 Vx       = 1      # variance social partner phenotype (impact covariate)
-Ve       = 0.7    # residual variance
-Vxe      = 0.2    # measurement error or variation of labile trait
+Ve       = 0.6    # residual variance
+Vxe      = 0.1    # measurement error or variation of labile trait
 
 # Correlations between variance components
-r_alpha_epsilon  =  0.4     # part of Cov int-phi
-r_alpha_psi      =  0       # part of Cov int-psi 
-r_epsilon_psi    =  0       # part of Cov psi-phi 
-r_alpha_x        =  0.4     # part of Cov int-phi 
-r_psi_x          =  0       # part of Cov psi-phi 
+r_alpha_epsilon  =  0       # part of Cov int-phi
+r_alpha_psi      =  -0.6    # part of Cov int-psi 
+r_epsilon_psi    =  -0.6    # part of Cov psi-phi 
+r_alpha_x        =  0.6     # part of Cov int-phi 
+r_psi_x          =  -0.6    # part of Cov psi-phi 
 r_epsilon_x      =  0
 ```
 
