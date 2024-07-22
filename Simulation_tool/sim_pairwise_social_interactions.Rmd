@@ -19,7 +19,9 @@ iterations= 4   # number of datasets
 
 Step 2. Enter effect sizes. 
 
-In order to simulate data with only a DGE and IGE (for variance-partitioning approaches), set Mpsi=0 and Vpsi=0. For trait-based or hybrid data without variation in responsiveness, set Vpsi=0. Optional: simulate measurement error on the opponent trait with Vxe. 
+In order to simulate data with only a DGE and IGE (for variance-partitioning approaches), set Mpsi=0 and Vpsi=0. 
+For trait-based or hybrid data without variation in responsiveness, set Vpsi=0. 
+Optional: simulate measurement error on the opponent trait with Vxe. 
 
 ```{r parameters}
 # Means
