@@ -1,4 +1,5 @@
-# Social-impact-and-responsiveness
+# Simulation tool for study design on social impact and
+  responsiveness
 
 Repository for article on how to deconstruct social interaction into social impact and responsiveness. All code and data used to create the figures is available in the folders corresponding to the headers in the article.
 
