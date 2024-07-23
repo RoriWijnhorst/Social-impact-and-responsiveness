@@ -8,14 +8,12 @@ title: >-
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-type: software
+type: dataset
 authors:
   - given-names: Rori Efrain
     family-names: Wijnhorst
   - given-names: Yimen G.
     family-names: Araya-Ajoy
-identifiers:
-  - type: url
-    value: >-
-      https://github.com/RoriWijnhorst/Social-impact-and-responsiveness
-date-released: '2024-23-07'
+repository-code: >-
+  https://github.com/RoriWijnhorst/Social-impact-and-responsiveness
+date-released: '2024-07-23'
