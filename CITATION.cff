@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Simulation tool for study design on social impact and
+  responsiveness
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Rori Efrain
+    family-names: Wijnhorst
+identifiers:
+  - type: url
+    value: >-
+      https://github.com/RoriWijnhorst/Social-impact-and-responsiveness
