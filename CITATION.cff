@@ -12,7 +12,10 @@ type: software
 authors:
   - given-names: Rori Efrain
     family-names: Wijnhorst
+  - given-names: Yimen G.
+    family-names: Araya-Ajoy
 identifiers:
   - type: url
     value: >-
       https://github.com/RoriWijnhorst/Social-impact-and-responsiveness
+date-released: '2024-23-07'
