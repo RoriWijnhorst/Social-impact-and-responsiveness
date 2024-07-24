@@ -5,7 +5,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(forcats)
 
-setwd("~/Social-impact-and-responsivenesss/Sampling_design")
+setwd("~/Social-impact-and-responsiveness/Sampling_designs")
 
 df1_800_400_2_1x  <-read.csv("res_800_400_2_1x.csv")
 df1_800_200_4_1x  <-read.csv("res_800_200_4_1x.csv")
@@ -34,6 +34,26 @@ df <- gdata::combine(
   df3_800_100_4_2x,
   df3_800_100_2_4x)
 
+# Means
+Malpha   = 1      # mean focal effect
+Mepsilon = 0      # mean partner effect
+Mpsi     = 0.3    # interaction coefficient psi
+Mx       = 0      # mean-centered covariate/opponent trait
+
+# Variances
+Valpha   = 0.2    # variance direct effect (mean behaviour)
+Vepsilon = 0.01   # variance social partner effect (residual impact)
+Vpsi     = 0.1    # variance in slopes (social responsiveness)
+Vx       = 1      # variance social partner phenotype (impact covariate)
+
+# Correlations between variance components
+r_alpha_epsilon  =  0       # part of Cov int-phi
+r_alpha_psi      =  -0.6    # part of Cov int-psi 
+r_epsilon_psi    =  -0.6    # part of Cov psi-phi 
+r_alpha_x        =  0.6     # part of Cov int-phi 
+r_psi_x          =  -0.6    # part of Cov psi-phi 
+r_epsilon_x      =  0
+
 df$Q <- df$source
 df$Q <- gsub('df','',df$Q)
 df$Q <- as.factor(df$Q)
@@ -43,16 +63,14 @@ df <- df %>%  mutate(ind = fct_relevel(ind, "400","200","100","50"))
 ## boxplots ----
 dfv_Q1 <- filter(df, Q==1, Parameter=="Sigma2_intercept"|Parameter=="Sigma2_psi"|Parameter=="Sigma2_phi")
 dfv_Q1$ind <- as.numeric(as.factor(dfv_Q1$ind))
-MAE <- dfv_Q1 %>% group_by(ind,Parameter) %>% summarize(MAE = mean(abs(RBias))) %>%   ungroup() 
-
 
 plot1<-ggplot(dfv_Q1, aes(x = ind, y = V3, fill = Parameter, group=interaction(ind,Parameter))) + 
   geom_boxplot(size=0.5, outlier.shape = NA) +
   scale_x_continuous(name="Number of individuals/\nsocial partners", breaks=c(1:4), labels=c("400\n2","200\n4","100\n8","50\n16"))+
   scale_y_continuous(name="Bias and precision", breaks = c(0,0.1,0.2,0.3), limits= c(0,0.35)) +
-  geom_hline(aes(yintercept = Vad), linetype = 'longdash', col = "#66c2a5") +
+  geom_hline(aes(yintercept = Valpha), linetype = 'longdash', col = "#66c2a5") +
   geom_hline(aes(yintercept = Vpsi+0.001), linetype = 'longdash', col = "#fc8d62") +
-  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vas-0.001), linetype = 'longdash', col = "#8da0cb") +
+  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vepsilon-0.001), linetype = 'longdash', col = "#8da0cb") +
   scale_fill_manual(values=c("#66C2A5", "#8DA0CB", "#FC8D62"), labels=c("\U1D449\U1D6FC", "\U1D449\U1D719", "\U1D449\U1D713")) +
   annotate("text", x=2.5, y=0.35, label= "repeats = 1x",size=4) +
   theme_bw(base_size = 10) +
@@ -76,9 +94,9 @@ plot2<-ggplot(dfv_Q2, aes(x = ind, y = V3, fill = Parameter, group=interaction(i
   geom_boxplot(size=0.5, outlier.shape = NA) +
   scale_x_continuous(name="Number of individuals/\nrepeats", breaks=c(2,3,4), labels=c("200\n1x","100\n2x","50\n4x"))+
   scale_y_continuous(name="Bias and precision", breaks = c(0,0.1,0.2,0.3), limits= c(0,0.35)) +
-  geom_hline(aes(yintercept = Vad), linetype = 'longdash', col = "#66c2a5") +
+  geom_hline(aes(yintercept = Valpha), linetype = 'longdash', col = "#66c2a5") +
   geom_hline(aes(yintercept = Vpsi+0.001), linetype = 'longdash', col = "#fc8d62") +
-  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vas-0.001), linetype = 'longdash', col = "#8da0cb") +
+  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vepsilon-0.001), linetype = 'longdash', col = "#8da0cb") +
   scale_fill_manual(values=c("#66C2A5", "#8DA0CB", "#FC8D62"), labels=c("\U1D449\U1D6FC", "\U1D449\U1D719", "\U1D449\U1D713")) +
   annotate("text", x=3, y=0.35, label= "partners = 4",size=4) +
   labs(title=expression(''~italic(N)~'= 800'),)+
@@ -106,9 +124,9 @@ plot3<-ggplot(dfv_Q3, aes(x = n_per_ind, y = V3, fill = Parameter, group=interac
   geom_boxplot(size=0.5, outlier.shape = NA) +
   scale_x_continuous(name="Number of social partners/\nrepeats", breaks=c(1,2,3), labels=c("8\n1x","4\n2x","2\n4x"))+
   scale_y_continuous(name="Bias and precision", breaks = c(0,0.1,0.2,0.3), limits= c(0,0.35)) +
-  geom_hline(aes(yintercept = Vad), linetype = 'longdash', col = "#66c2a5") +
+  geom_hline(aes(yintercept = Valpha), linetype = 'longdash', col = "#66c2a5") +
   geom_hline(aes(yintercept = Vpsi+0.001), linetype = 'longdash', col = "#fc8d62") +
-  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vas-0.001), linetype = 'longdash', col = "#8da0cb") +
+  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vepsilon-0.001), linetype = 'longdash', col = "#8da0cb") +
   scale_fill_manual(values=c("#66C2A5", "#8DA0CB", "#FC8D62"), labels=c("\U1D449\U1D6FC", "\U1D449\U1D719", "\U1D449\U1D713")) +
   annotate("text", x=2, y=0.35, label= "individuals = 100",size=4) +
   theme_bw(base_size = 10) +
@@ -135,9 +153,12 @@ p1<-ggplot(dfc_Q1,aes(x = ind, y = V3, fill = Parameter, group=interaction(ind,P
   scale_x_continuous(name="Number of individuals/\nsocial partners", breaks=c(1:4),labels=c("400\n2","200\n4","100\n8","50\n16"))+
   scale_y_continuous(name="Bias and precision", breaks = c(-0.1,0,0.1), limits= c(-0.14,0.14)) +
   geom_hline(aes(yintercept = 0), linetype = 'dashed',  col="grey") +
-  geom_hline(aes(yintercept = Cdpsi), linetype = 'longdash', col ="#A6D854") +
-  geom_hline(aes(yintercept = Cds+Mpsi*Cdx), linetype = 'longdash', col =  "#E78AC3") +
-  geom_hline(aes(yintercept = Cspsi+Mpsi*Cpsix), linetype = 'longdash', col = "#FFD92F") +
+  geom_hline(aes(yintercept = r_alpha_psi*(sqrt(Valpha*Vpsi))), 
+             linetype = 'dashed', col ="#A6D854") +
+  geom_hline(aes(yintercept = r_alpha_epsilon*(sqrt(Valpha*Vepsilon))+ Mpsi*r_alpha_x*(sqrt(Valpha*Vx))), 
+             linetype = 'dashed', col =  "#E78AC3") +
+  geom_hline(aes(yintercept = r_epsilon_psi*(sqrt(Vepsilon*Vpsi))    + Mpsi*r_psi_x*(sqrt(Vpsi*Vx))), 
+             linetype = 'dashed', col = "#FFD92F") +
   labs(y = "Bias and precision", x = "Sample size") +
   scale_fill_manual(values=c("#E78AC3","#A6D854", "#FFD92F"), labels=
                       c("\U1D436\U1D45C\U1D463\U2768\U1D6FC\U002C\U1D719\U2769",
@@ -165,9 +186,12 @@ p2<-ggplot(dfc_Q2,aes(x = ind, y = V3, fill = Parameter, group=interaction(ind,P
   scale_x_continuous(name="Number of individuals/\nrepeats", breaks=c(2,3,4), labels=c("200\n1x","100\n2x","50\n4x"))+
   scale_y_continuous(name="Bias and precision", breaks = c(-0.1,0,0.1), limits= c(-0.14,0.14)) +
   geom_hline(aes(yintercept = 0), linetype = 'dashed',  col="lightgrey") +
-  geom_hline(aes(yintercept = Cdpsi), linetype = 'longdash', col ="#A6D854") +
-  geom_hline(aes(yintercept = Cds+Mpsi*Cdx), linetype = 'longdash', col =  "#E78AC3") +
-  geom_hline(aes(yintercept = Cspsi+Mpsi*Cpsix), linetype = 'longdash', col = "#FFD92F") +
+  geom_hline(aes(yintercept = r_alpha_psi*(sqrt(Valpha*Vpsi))), 
+             linetype = 'dashed', col ="#A6D854") +
+  geom_hline(aes(yintercept = r_alpha_epsilon*(sqrt(Valpha*Vepsilon))+ Mpsi*r_alpha_x*(sqrt(Valpha*Vx))), 
+             linetype = 'dashed', col =  "#E78AC3") +
+  geom_hline(aes(yintercept = r_epsilon_psi*(sqrt(Vepsilon*Vpsi))    + Mpsi*r_psi_x*(sqrt(Vpsi*Vx))), 
+             linetype = 'dashed', col = "#FFD92F") +
   labs(y = "Bias and precision", x = "Sample size") +
   scale_fill_manual(values=c("#E78AC3","#A6D854", "#FFD92F"), labels=
                       c("\U1D436\U1D45C\U1D463\U2768\U1D6FC\U002C\U1D719\U2769",
@@ -198,9 +222,12 @@ p3<-ggplot(dfc_Q3,aes(x = n_per_ind, y = V3, fill = Parameter, group=interaction
   scale_x_continuous(name="Number of social partners/\nrepeats", breaks=c(1,2,3), labels=c("8\n1x","4\n2x","2\n4x")) +
   scale_y_continuous(name="Bias and precision", breaks = c(-0.1,0,0.1), limits= c(-0.14,0.14)) +
   geom_hline(aes(yintercept = 0), linetype = 'dashed',  col="lightgrey") +
-  geom_hline(aes(yintercept = Cdpsi), linetype = 'longdash', col ="#A6D854") +
-  geom_hline(aes(yintercept = Cds+Mpsi*Cdx), linetype = 'longdash', col =  "#E78AC3") +
-  geom_hline(aes(yintercept = Cspsi+Mpsi*Cpsix), linetype = 'longdash', col = "#FFD92F") +
+  geom_hline(aes(yintercept = r_alpha_psi*(sqrt(Valpha*Vpsi))), 
+             linetype = 'dashed', col ="#A6D854") +
+  geom_hline(aes(yintercept = r_alpha_epsilon*(sqrt(Valpha*Vepsilon))+ Mpsi*r_alpha_x*(sqrt(Valpha*Vx))), 
+             linetype = 'dashed', col =  "#E78AC3") +
+  geom_hline(aes(yintercept = r_epsilon_psi*(sqrt(Vepsilon*Vpsi))    + Mpsi*r_psi_x*(sqrt(Vpsi*Vx))), 
+             linetype = 'dashed', col = "#FFD92F") +
   labs(y = "Bias and precision", x = "Sample size") +
   scale_fill_manual(values=c("#E78AC3","#A6D854", "#FFD92F"), labels=
                       c("\U1D436\U1D45C\U1D463\U2768\U1D6FC\U002C\U1D719\U2769",

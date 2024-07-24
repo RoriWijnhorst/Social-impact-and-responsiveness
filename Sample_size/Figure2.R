@@ -6,7 +6,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(forcats)
 
-setwd("~/Social-impact-and-responsivenesss/Sample_size")
+setwd("~/Social-impact-and-responsiveness/Sample_size")
 
 df_400_100_4_1x <-read.csv("res_400_100_4_1x.csv")
 df_800_200_4_1x <-read.csv("res_800_200_4_1x.csv")
@@ -22,8 +22,25 @@ df <- gdata::combine(
   df_6400_1600_4_1x
   )
 
-Mad<- 1
-Mpsi <- 0.1
+# Means
+Malpha   = 1      # mean focal effect
+Mepsilon = 0      # mean partner effect
+Mpsi     = 0.3    # interaction coefficient psi
+Mx       = 0      # mean-centered covariate/opponent trait
+
+# Variances
+Valpha   = 0.2    # variance direct effect (mean behaviour)
+Vepsilon = 0.01   # variance social partner effect (residual impact)
+Vpsi     = 0.1    # variance in slopes (social responsiveness)
+Vx       = 1      # variance social partner phenotype (impact covariate)
+
+# Correlations between variance components
+r_alpha_epsilon  =  0       # part of Cov int-phi
+r_alpha_psi      =  -0.6    # part of Cov int-psi 
+r_epsilon_psi    =  -0.6    # part of Cov psi-phi 
+r_alpha_x        =  0.6     # part of Cov int-phi 
+r_psi_x          =  -0.6    # part of Cov psi-phi 
+r_epsilon_x      =  0
 
 df <- rename(df, Q=source)
 df$Q <- gsub('df','',df$Q)
@@ -40,7 +57,7 @@ p1<-ggplot(df1,aes(x=N, y=V3, fill=Parameter, group=interaction(N,Parameter))) +
   geom_boxplot(size=0.6,outlier.shape=NA) +
   scale_y_continuous(breaks= c(0,0.2,0.4,0.6,0.8,1,1.2)) +
   scale_x_continuous(name="Total number of observations", breaks=c(1:5), labels=c(400,800,1600,3200,6400)) +
-  geom_hline(aes(yintercept = Mad), linetype='dashed', col="#B3B3B3") +
+  geom_hline(aes(yintercept = Malpha), linetype='dashed', col="#B3B3B3") +
   geom_hline(aes(yintercept = Mpsi), linetype='dashed', col="#E5C494") +
   labs(y="Bias and precision", x="Sample size") +
   scale_fill_manual(values = c("#B3B3B3","#E5C494"), labels=c("\U1D6FD","\U1D713")) +
@@ -60,9 +77,9 @@ p2<-ggplot(df2,aes(x=N, y=V3, fill=Parameter, group=interaction(N,Parameter))) +
   geom_boxplot(size=0.6,outlier.shape=NA) +
   scale_x_continuous(name="Total number of observations", breaks=c(1:5), labels=c(400,800,1600,3200,6400))+
   scale_y_continuous(limits= c(0.0,0.33)) +
-  geom_hline(aes(yintercept = Vad), linetype = 'dashed', col = "#66c2a5") +
+  geom_hline(aes(yintercept = Valpha), linetype = 'dashed', col = "#66c2a5") +
   geom_hline(aes(yintercept = Vpsi+0.001), linetype = 'dashed', col = "#fc8d62") +
-  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vas-0.001), linetype = 'dashed', col = "#8da0cb") +
+  geom_hline(aes(yintercept = (Mpsi^2 * Vx + Vepsilon)-0.001), linetype = 'dashed', col = "#8da0cb") +
   scale_fill_manual(values=c("#66C2A5", "#8DA0CB", "#FC8D62"), labels=c("\U1D449\U1D6FC", "\U1D449\U1D719", "\U1D449\U1D713")) +
   theme_bw(base_size=10) +
   theme(
@@ -82,9 +99,12 @@ p3<-ggplot(df3,aes(x=N, y=V3, fill=Parameter, group=interaction(N,Parameter))) +
   geom_boxplot(size=0.6,outlier.shape=NA) +
   scale_x_continuous(name="Total number of observations", breaks=c(1:5), labels=c(400,800,1600,3200,6400))+
   scale_y_continuous(limits= c(-0.15,0.15))+
-  geom_hline(aes(yintercept = Cdpsi), linetype = 'dashed', col ="#A6D854") +
-  geom_hline(aes(yintercept = Cds+Mpsi*Cdx), linetype = 'dashed', col =  "#E78AC3") +
-  geom_hline(aes(yintercept = Cspsi+Mpsi*Cpsix), linetype = 'dashed', col = "#FFD92F") +
+  geom_hline(aes(yintercept = r_alpha_psi*(sqrt(Valpha*Vpsi))), 
+             linetype = 'dashed', col ="#A6D854") +
+  geom_hline(aes(yintercept = r_alpha_epsilon*(sqrt(Valpha*Vepsilon))+ Mpsi*r_alpha_x*(sqrt(Valpha*Vx))), 
+             linetype = 'dashed', col =  "#E78AC3") +
+  geom_hline(aes(yintercept = r_epsilon_psi*(sqrt(Vepsilon*Vpsi))    + Mpsi*r_psi_x*(sqrt(Vpsi*Vx))), 
+             linetype = 'dashed', col = "#FFD92F") +
   labs(y = "Bias and precision", x = "Sample size") +
   scale_fill_manual(values=c("#E78AC3","#A6D854", "#FFD92F"), labels=
                         c("\U1D436\U1D45C\U1D463\U2768\U1D6FC\U002C\U1D719\U2769",

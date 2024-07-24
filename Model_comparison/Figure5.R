@@ -5,10 +5,12 @@ library(ggplot2)
 library(RColorBrewer)
 library(forcats)
 
-df1_800_400_2_1x  <-read.csv("res_800_400_2_1x.csv")
-df1_800_200_4_1x  <-read.csv("res_800_200_4_1x.csv")
-df1_800_100_8_1x  <-read.csv("res_800_100_8_1x.csv")
-df1_800_50_16_1x  <-read.csv("res_800_50_16_1x.csv")
+setwd("~/Social-impact-and-responsiveness/Model_comparison")
+
+df1_800_400_2_1x  <-read.csv("res_800_400_2_1x_M1.csv")
+df1_800_200_4_1x  <-read.csv("res_800_200_4_1x_M1.csv")
+df1_800_100_8_1x  <-read.csv("res_800_100_8_1x_M1.csv")
+df1_800_50_16_1x  <-read.csv("res_800_50_16_1x_M1.csv")
 
 df2_800_400_2_1x  <-read.csv("res_800_400_2_1x_M2.csv")
 df2_800_200_4_1x  <-read.csv("res_800_200_4_1x_M2.csv")
@@ -20,15 +22,6 @@ df3_800_200_4_1x  <-read.csv("res_800_200_4_1x_M3.csv")
 df3_800_100_8_1x  <-read.csv("res_800_100_8_1x_M3.csv")
 df3_800_50_16_1x  <-read.csv("res_800_50_16_1x_M3.csv")
 
-df4_800_400_2_1x  <-read.csv("res_800_400_2_1x_M4.csv")
-df4_800_200_4_1x  <-read.csv("res_800_200_4_1x_M4.csv")
-df4_800_100_8_1x  <-read.csv("res_800_100_8_1x_M4.csv")
-df4_800_50_16_1x  <-read.csv("res_800_50_16_1x_M4.csv")
-
-df5_800_400_2_1x  <-read.csv("res_800_400_2_1x_M5.csv")
-df5_800_200_4_1x  <-read.csv("res_800_200_4_1x_M5.csv")
-df5_800_100_8_1x  <-read.csv("res_800_100_8_1x_M5.csv")
-df5_800_50_16_1x  <-read.csv("res_800_50_16_1x_M5.csv")
 
 df <- gdata::combine(
   df1_800_400_2_1x, 
@@ -44,23 +37,29 @@ df <- gdata::combine(
   df3_800_400_2_1x, 
   df3_800_200_4_1x, 
   df3_800_100_8_1x,
-  df3_800_50_16_1x,
-  
-  df4_800_400_2_1x, 
-  df4_800_200_4_1x, 
-  df4_800_100_8_1x,
-  df4_800_50_16_1x,
-  
-  df5_800_400_2_1x, 
-  df5_800_200_4_1x, 
-  df5_800_100_8_1x,
-  df5_800_50_16_1x
+  df3_800_50_16_1x
   )
+
+# Means
+Mpsi     = 0.3    # interaction coefficient psi
+
+# Variances
+Valpha   = 0.2    # variance direct effect (mean behaviour)
+Vepsilon = 0.01   # variance social partner effect (residual impact)
+Vx       = 1      # variance social partner phenotype (impact covariate)
+
+# Correlations between variance components
+r_alpha_epsilon  =  0       # part of Cov int-phi
+r_alpha_x        =  0.6     # part of Cov int-phi 
+
+Vphi <- Mpsi^2 * Vx + Vepsilon
+Cov_alpha.phi <- r_alpha_epsilon*(sqrt(Valpha*Vepsilon))+ Mpsi*r_alpha_x*(sqrt(Valpha*Vx))
+
 
 df$RBias <- NA
 df$RBias <- ifelse(df$Parameter=="psi", (df$V3-Mpsi)/Mpsi, df$RBias)
-df$RBias <- ifelse(df$Parameter=="Sigma2_phi", (df$V3-(Mpsi^2*Vx + Vas))/(Mpsi^2*Vx + Vas),df$RBias)
-df$RBias <- ifelse(df$Parameter=="cov_int_phi", (df$V3-(Cds+Mpsi*Cdx))/(Cds+Mpsi*Cdx),df$RBias)
+df$RBias <- ifelse(df$Parameter=="Sigma2_phi", ((df$V3-Vphi)/Vphi),df$RBias)
+df$RBias <- ifelse(df$Parameter=="cov_int_phi", ((df$V3-Cov_alpha.phi)/Cov_alpha.phi),df$RBias)
 
 df <- rename(df, Q=source)
 df$Q <- gsub('df','',df$Q)
@@ -73,7 +72,6 @@ df1 <- filter(df, Model!=4, Model!=5)
 df1<-na.omit(df1)
 summary <- df1 %>% group_by(Model,N,ind,n_per_ind,repeats,Parameter) %>%
   summarise(MAE = mean(abs(RBias)))
-summary <- summary %>% mutate(Parameter = fct_relevel(Parameter, "Sigma2_intercept","Sigma2_phi","Sigma2_psi","cov_int_phi","cov_int_psi", "cov_psi_phi"))
 
 summary1 <- filter(summary, Parameter == "psi")
 summary2 <- filter(summary, Parameter == "Sigma2_phi" )
@@ -148,7 +146,7 @@ p3<-ggplot(summary3,(aes(x=ind, y=MAE*100, col=Parameter, group=Model))) +
 
 
 ## Boxplots ----
-df1 <- filter(df, Parameter=="psi", Model==1|Model==2|Model==3)
+df1 <- filter(df, Parameter=="psi")
 df1$ind <- as.numeric(as.factor(df1$ind))
 
 plot1<-ggplot(df1,aes(x = ind, y = V3, fill=Model,col= Parameter, group=interaction(Model,ind,Parameter))) + 
@@ -172,14 +170,14 @@ plot1<-ggplot(df1,aes(x = ind, y = V3, fill=Model,col= Parameter, group=interact
     legend.text=element_text(size=14),
     legend.title = element_text())
 
-df2 <- filter(df, Parameter == "Sigma2_phi", Model==1|Model==2|Model==3)
+df2 <- filter(df, Parameter == "Sigma2_phi")
 df2$ind <- as.numeric(as.factor(df2$ind))
 
 plot2<-ggplot(df2,aes(x = ind, y = V3, fill=Model,col= Parameter, group=interaction(Model,ind,Parameter))) + 
   geom_boxplot(size=0.8, outlier.shape = NA) +
   scale_x_continuous(name="Number of individuals/\nsocial partners", breaks=c(1:4),labels=c("400\n2","200\n4","100\n8","50\n16"))+
   scale_y_continuous(name="Bias and precision", breaks = c(0,0.1,0.2), limits= c(-0.02,0.25)) +
-  geom_hline(aes(yintercept = Mpsi^2 * Vx + Vas-0.001), linetype = 'dashed', col = "#8da0cb") +
+  geom_hline(aes(yintercept = Vphi), linetype = 'dashed', col = "#8da0cb") +
   scale_colour_manual(values=c("#8DA0CB"), labels=c("\U1D449\U1D719")) +
   scale_fill_brewer(palette = "Greys") +
   theme_bw(base_size = 10) +
@@ -196,14 +194,15 @@ plot2<-ggplot(df2,aes(x = ind, y = V3, fill=Model,col= Parameter, group=interact
     legend.text=element_text(size=14),
     legend.title = element_text())
 
-df3 <- filter(df, Parameter == "cov_int_phi", Model==1|Model==2|Model==3)
+df3 <- filter(df, Parameter == "cov_int_phi")
 df3$ind <- as.numeric(as.factor(df3$ind))
 
 plot3<-ggplot(df3,aes(x = ind, y = V3, col= Parameter,fill=Model, group=interaction(Model,ind,Parameter))) + 
   geom_boxplot(size=0.8, outlier.shape = NA) +
   scale_x_continuous(name="Number of individuals/\nsocial partners", breaks=c(1:4),labels=c("400\n2","200\n4","100\n8","50\n16"))+
   scale_y_continuous(name="Bias and precision", breaks = c(0,0.1,0.2), limits= c(-0.02,0.25)) +
-  geom_hline(aes(yintercept = Cds+Mpsi*Cdx), linetype = 'dashed', col =  "#E78AC3") +
+  geom_hline(aes(yintercept = Cov_alpha.phi),
+             linetype = 'dashed', col =  "#E78AC3") +
   labs(y = "Bias and precision", x = "Sample size") +
   scale_colour_manual(values=c("#E78AC3"), labels=
                       c("\U1D436\U1D45C\U1D463\U2768\U1D6FC\U002C\U1D719\U2769"),
