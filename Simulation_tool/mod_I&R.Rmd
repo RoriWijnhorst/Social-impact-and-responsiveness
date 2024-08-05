@@ -7,7 +7,7 @@ output: html_document
 
 Step 1. In order to run simulations on multiple cores, specify number of available cores under n_cores.
 ```{r setup}
-n_cores <- 4
+n_cores <- 6
 require(parallel)
 cl <- makeCluster(n_cores)
 clusterEvalQ(cl, {
@@ -73,9 +73,9 @@ write( "data {
  
 model {
 // Create vector of predicted values
-  to_vector([B_0]) ~ normal(0, 1);
+  to_vector([B_0]) ~ normal(0,1);
   to_vector([B_x]) ~ normal(0,1);
-  to_vector([psi]) ~ normal(0, 1);
+  to_vector([psi]) ~ normal(0,1);
   
 
  // Random effects distribution
@@ -131,7 +131,7 @@ cov_6 = Omega_I[3,4]*sqrt(Sigma2_x*Sigma2_epsilon);
 cov_int_psi = cov_1;
 cov_int_phi = cov_2 + psi*cov_4;  
 cov_psi_phi = cov_3 + psi*cov_5; 
-Sigma2_phi=sigma_I[3]^2 + psi^2*sigma_I[4]^2 + 2*cov_6*psi;  // variance total impact, also depends on covariance between x and epsilon
+Sigma2_phi=sigma_I[3]^2 + psi^2*sigma_I[4]^2;  // variance total impact, also depends on covariance between x and epsilon
 
  }", file="RR.stan")
 
@@ -143,8 +143,8 @@ stan_func<-function(datalist){
                       "Sigma2_epsilon", "Sigma2_phi", "cov_int_psi", "cov_int_phi",
                       "cov_psi_phi", "cov_1",  "cov_2", "cov_3", "cov_4", "cov_5",
                       "cov_6", "Sigma2_e", "Sigma2_ex"),
-             control=list(max_treedepth = 15), chains = 1, iter = 5000,
-             warmup = 1000, thin = 1, cores = 1)
+             control=list(max_treedepth = 15), chains = 1, iter = 8000,
+             warmup = 2000, thin = 1, cores = 1)
   dat <- as.data.frame(t(round(summary(md)$summary[,c(1,4,6,8,9,10)],3)))
   dat
 }

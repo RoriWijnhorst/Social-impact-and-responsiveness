@@ -11,10 +11,10 @@ require(MASS)
 Step 1. Enter study design dimensions and the number of iterated datasets for balanced datasets of pairwise interactions
 
 ```{r sampling dimensions and number of datasets}
-n_ind     = 100 # number of individuals 
+n_ind     = 200 # number of individuals 
 partners  = 4   # number of partners per individual
 repeats   = 1   # number of repeats of unique dyadic interaction
-iterations= 4   # number of datasets
+iterations= 100 # number of data sets
 ```
 
 Step 2. Enter effect sizes. 
@@ -109,7 +109,7 @@ dfl[[i]]<-list(n_obs = nrow(df2),
                  opponent=df2$IDj,
                  xj=df2$x_ijk,  # model input is the observed xj
                  xi=xi$x,
-                 z=df2$zi)
+                 z=df2$z_i)
 }
 
 # List saving: dfl_N(total observations)_N(indidviduals)_N(social partners)_N(repeats)
