@@ -7,7 +7,7 @@ output: html_document
 
 Step 1. In order to run simulations on multiple cores, specify number of available cores under n_cores.
 ```{r setup}
-n_cores <- 6
+n_cores <- 4
 require(parallel)
 cl <- makeCluster(n_cores)
 clusterEvalQ(cl, {
@@ -17,7 +17,7 @@ clusterEvalQ(cl, {
 
 Step 2. Load list with simulated datasets
 ```{r datalist}
-datalist<-readRDS("Your_datalist.RDS")
+datalist<-readRDS("your_datalist.RDS")
 ```
 
 Step 3. Run Stan model and extract output.csv 
@@ -67,7 +67,7 @@ write( "data {
      }
 
    for (i in 1:n_obs) {
-     e_z[i]  = B_0  +  I[1, individual[i]] + (psi + I[2, individual[i]])*I[4, opponent[i]] + I[3, opponent[i]];
+     e_z[i]  = B_0  +  I[1, individual[i]] + (psi + I[2, individual[i]])*xj[i] + I[3, opponent[i]];
    }
  }
  
@@ -93,45 +93,24 @@ model {
  }
 
 generated quantities{
-real<lower=0> Sigma2_intercept;
-real<lower=0> Sigma2_psi;
-real<lower=0> Sigma2_epsilon;
-real<lower=0> Sigma2_x;
-real<lower=0> Sigma2_phi;
-real<lower=0> Sigma2_e;
-real<lower=0> Sigma2_ex;
+real<lower=0> Sigma2_intercept=sigma_I[1]^2; 
+real<lower=0> Sigma2_psi=sigma_I[2]^2;
+real<lower=0> Sigma2_epsilon=sigma_I[3]^2;
+real<lower=0> Sigma2_x=sigma_I[4]^2;
+real<lower=0> Sigma2_phi=sigma_I[3]^2 + psi^2*sigma_I[4]^2;
+real<lower=0> Sigma2_e=sigma_e^2;
+real<lower=0> Sigma2_ex=sigma_ex^2;
 
-real cov_1; //   psi-int
-real cov_2; //   int-resimpact
-real cov_3; //   psi-resimpact
-real cov_4; //   x-int
-real cov_5; //   x-psi
-real cov_6; //   x-resimpact
-real cov_int_psi;
-real cov_int_phi;
-real cov_psi_phi;
-
-matrix[4, 4]  Omega_I;
-
-Sigma2_intercept=sigma_I[1]^2; 
-Sigma2_psi=sigma_I[2]^2;
-Sigma2_epsilon=sigma_I[3]^2;
-Sigma2_x=sigma_I[4]^2;
-
-Sigma2_e=sigma_e^2;
-Sigma2_ex=sigma_ex^2;
-
-Omega_I = L * L';             
-cov_1 = Omega_I[1,2]*sqrt(Sigma2_psi*Sigma2_intercept);   
-cov_2 = Omega_I[1,3]*sqrt(Sigma2_epsilon*Sigma2_intercept);
-cov_3 = Omega_I[2,3]*sqrt(Sigma2_psi*Sigma2_epsilon);
-cov_4 = Omega_I[1,4]*sqrt(Sigma2_x*Sigma2_intercept);
-cov_5 = Omega_I[2,4]*sqrt(Sigma2_x*Sigma2_psi);
-cov_6 = Omega_I[3,4]*sqrt(Sigma2_x*Sigma2_epsilon);
-cov_int_psi = cov_1;
-cov_int_phi = cov_2 + psi*cov_4;  
-cov_psi_phi = cov_3 + psi*cov_5; 
-Sigma2_phi=sigma_I[3]^2 + psi^2*sigma_I[4]^2;  // variance total impact, also depends on covariance between x and epsilon
+matrix[4, 4]  Omega_I= L * L';  
+real cov_1 = Omega_I[1,2]*sqrt(Sigma2_psi*Sigma2_intercept); //   psi-int
+real cov_2 = Omega_I[1,3]*sqrt(Sigma2_epsilon*Sigma2_intercept); //   int-resimpact
+real cov_3 = Omega_I[2,3]*sqrt(Sigma2_psi*Sigma2_epsilon); //   psi-resimpact
+real cov_4 = Omega_I[1,4]*sqrt(Sigma2_x*Sigma2_intercept); //   x-int
+real cov_5 = Omega_I[2,4]*sqrt(Sigma2_x*Sigma2_psi); //   x-psi
+real cov_6 = Omega_I[3,4]*sqrt(Sigma2_x*Sigma2_epsilon); //   x-resimpact
+real cov_int_psi = cov_1;
+real cov_int_phi = cov_2 + psi*cov_4;
+real cov_psi_phi = cov_3 + psi*cov_5;
 
  }", file="RR.stan")
 
@@ -143,7 +122,7 @@ stan_func<-function(datalist){
                       "Sigma2_epsilon", "Sigma2_phi", "cov_int_psi", "cov_int_phi",
                       "cov_psi_phi", "cov_1",  "cov_2", "cov_3", "cov_4", "cov_5",
                       "cov_6", "Sigma2_e", "Sigma2_ex"),
-             control=list(max_treedepth = 15), chains = 1, iter = 8000,
+             control=list(max_treedepth = 15), chains = 1, iter = 5000,
              warmup = 2000, thin = 1, cores = 1)
   dat <- as.data.frame(t(round(summary(md)$summary[,c(1,4,6,8,9,10)],3)))
   dat
